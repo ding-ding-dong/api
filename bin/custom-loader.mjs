@@ -4,7 +4,7 @@ import process from 'process';
 import Module from 'module';
 
 const builtins = Module.builtinModules;
-const JS_EXTENSIONS = new Set(['.js', '.mjs']);
+const JS_EXTENSIONS = new Set(['', '.js', '.mjs']);
 
 export function resolve(specifier, parentModuleURL, defaultResolve) {
   if (builtins.includes(specifier)) {
@@ -23,7 +23,7 @@ export function resolve(specifier, parentModuleURL, defaultResolve) {
       `Cannot load file with non-JavaScript file extension ${ext}.`);
   }
   return {
-    url: resolved.href,
+    url: resolved.href + (ext ? '' : '.js'),
     format: 'esm'
   };
 }
