@@ -2,7 +2,7 @@
 
 import request from 'request'
 import FeedParser from 'feedparser'
-import Iconv from 'Iconv'
+import Iconv from 'iconv'
 
 var maybeTranslate = function (res, charset, done) {
   var iconv;
