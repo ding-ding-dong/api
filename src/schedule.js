@@ -3,7 +3,9 @@ import nodeSchedule from 'node-schedule'
 import sync from './sync'
 
 const schedule = () => {
-  nodeSchedule.scheduleJob('0 * * * *', () => {
+  const cron = process.env.NODE_ENV === 'production' ? '0 * * * *' : '0 * * * * *'
+
+  nodeSchedule.scheduleJob(cron, () => {
     console.log('SCHEDULE: Sync started at: ' + new Date().toString())
     sync()
   })
