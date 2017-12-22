@@ -38,13 +38,11 @@ const onListening = () => {
   debug('Listening on ' + addr.address + ' ' + bind)
 }
 
-const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? '80' : '3000')
-const hostname = process.env.NODE_ENV === 'production' ? '0.0.0.0' : undefined
-
+const port = process.env.PORT || '3000'
 app.set('port', port)
 
 const server = http.createServer(app)
 
-server.listen(port, hostname)
+server.listen(port, '0.0.0.0')
 server.on('error', onError)
 server.on('listening', onListening)
