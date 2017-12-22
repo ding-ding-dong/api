@@ -35,14 +35,16 @@ const onListening = () => {
   const bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port
-  debug('Listening on ' + bind)
+  debug('Listening on ' + addr.address + ' ' + bind)
 }
 
-const port = process.env.PORT || '3000'
+const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? '80' : '3000')
+const hostname = process.env.NODE_ENV === 'production' ? '0.0.0.0' : undefined
+
 app.set('port', port)
 
 const server = http.createServer(app)
 
-server.listen(port)
+server.listen(port, hostname)
 server.on('error', onError)
 server.on('listening', onListening)
