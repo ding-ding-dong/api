@@ -3,9 +3,9 @@ import moment from 'moment'
 import ioredis from 'ioredis'
 
 import parser from '../utils/parser'
-import redisClientConfig from '../config/redis-client-config'
+import logger from '../utils/logger'
 
-const redis = new ioredis(redisClientConfig)
+const redis = new ioredis()
 
 const sources = {
   '36kr': 'http://36kr.com/feed',
@@ -46,7 +46,7 @@ const generatePromises = () => {
               })
             }
           } catch (e) {
-            console.log(e, e.stack)
+            logger.error(e)
           }
 
           try {
@@ -55,13 +55,12 @@ const generatePromises = () => {
               redis.zadd(setKey, moment.utc(feed.date).valueOf(), feed.guid)
             }
           } catch (e) {
-            console.log(e, e.stack)
+            logger.error(e)
           }
         }
       })
     } catch (e) {
-      console.log('ERROR: Failed of fetching data from [' + sources[key] + ']')
-      console.log(e, e.stack)
+      logger.error(e, 'ERROR: Failed of fetching data from [' + sources[key] + ']')
     }
 
     return feeds
@@ -72,14 +71,14 @@ const sync = async () => {
   try {
     await Promise.all(generatePromises())
 
-    console.log('SUCCESS: All sync tasks compeleted')
+    logger.info('SUCCESS: All sync tasks compeleted')
   } catch (e) {
-    console.log(e, e.stack)
+    logger.error(e)
 
     if (state.triedTimes < state.maxCanTryTimes) {
       setTimeout(function () {
         state.triedTimes++
-        console.log('INFO: Trying for the ' + state.triedTimes + 'th time')
+        logger.info('FAILURE: Trying for the ' + state.triedTimes + '/' + state.maxCanTryTimes + 'th time')
 
         sync()
       }, state.waitTime)

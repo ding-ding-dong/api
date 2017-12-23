@@ -1,8 +1,9 @@
 import moment from 'moment'
 import ioredis from 'ioredis'
-import redisClientConfig from '../config/redis-client-config'
 
-const redis = new ioredis(redisClientConfig)
+import logger from '../utils/logger'
+
+const redis = new ioredis()
 
 const parse = item => ({ ...item, feed: item.feed ? JSON.parse(item.feed) : null })
 
@@ -15,17 +16,17 @@ export const getAll = async () => {
         const item = await redis.hgetall(key)
         return parse(item)
       } catch (e) {
-        console.log(e, e.stack)
+        logger.error(e)
       }
     })
 
     try {
       return await Promise.all(promises)
     } catch (e) {
-      console.log(e, e.stack)
+      logger.error(e)
     }
   } catch (e) {
-    console.log(e, e.stack)
+    logger.error(e)
   }
 }
 
@@ -38,16 +39,16 @@ export const getByTimestamp = async (sDate, eDate) => {
         const item = await redis.hgetall('feed:' + key)
         return parse(item)
       } catch (e) {
-        console.log(e, e.stack)
+        logger.error(e)
       }
     })
 
     try {
       return await Promise.all(promises)
     } catch (e) {
-      console.log(e, e.stack)
+      logger.error(e)
     }
   } catch (e) {
-    console.log(e, e.stack)
+    logger.error(e)
   }
 }
