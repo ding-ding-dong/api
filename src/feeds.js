@@ -5,7 +5,11 @@ import logger from '../utils/logger'
 
 const redis = new ioredis()
 
-const parse = item => ({ ...item, feed: item.feed ? JSON.parse(item.feed) : null })
+const parse = item => ({
+  ...item,
+  source: item.source ? JSON.parse(item.source) : null,
+  feed: item.feed ? JSON.parse(item.feed) : null,
+})
 
 export const getAll = async () => {
   try {

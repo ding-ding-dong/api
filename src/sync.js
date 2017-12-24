@@ -4,20 +4,9 @@ import ioredis from 'ioredis'
 
 import parser from '../utils/parser'
 import logger from '../utils/logger'
+import sources from './sources'
 
 const redis = new ioredis()
-
-const sources = {
-  '36kr': 'http://36kr.com/feed',
-  'huxiu': 'https://www.huxiu.com/rss/0.xml',
-  'ifanr': 'http://www.ifanr.com/feed',
-  'tech2ipo': 'http://tech2ipo.com/feed',
-  'hackernews': 'https://news.ycombinator.com/rss',
-  'pmcaff': 'http://www.pmcaff.com/site/rss',
-  'woshipm': 'http://www.woshipm.com/feed',
-  'techcrunch': 'http://techcrunch.cn/feed/',
-  'smzdm': 'http://post.smzdm.com/feed',
-}
 
 const state = {
   triedTimes: 1,
@@ -27,10 +16,11 @@ const state = {
 
 const generatePromises = () => {
   return Object.keys(sources).map(async key => {
+    const source = sources[key]
     let feeds = null
 
     try {
-      feeds = await parser.fetchAsync(sources[key])
+      feeds = await parser.fetchAsync(source.url)
       feeds.forEach(async feed => {
         if (feed.guid && feed.date) {
           const hashKey = 'feed:' + feed.guid
@@ -41,7 +31,7 @@ const generatePromises = () => {
             if (!isExists) {
               redis.hmset(hashKey, {
                 uuid: uuid(),
-                source: key,
+                source: JSON.stringify(source),
                 feed: JSON.stringify(feed),
               })
             }
@@ -60,7 +50,7 @@ const generatePromises = () => {
         }
       })
     } catch (e) {
-      logger.error(e, 'ERROR: Failed of fetching data from [' + sources[key] + ']')
+      logger.error(e, 'ERROR: Failed of fetching data from [' + source.url + ']')
     }
 
     return feeds
