@@ -15,8 +15,7 @@ const state = {
 }
 
 const generatePromises = () => {
-  return Object.keys(sources).map(async key => {
-    const source = sources[key]
+  return sources.map(async source => {
     let feeds = null
 
     try {
