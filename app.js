@@ -12,6 +12,11 @@ app.disable('x-powered-by')
 
 app.use(morgan('combined', { stream: logStream('access') }))
 
+app.use((req, res, next) => {
+  res.set('Access-Control-Allow-Origin', '*')
+  next()
+})
+
 app.use('/sources', sources)
 app.use('/feeds', feeds)
 
