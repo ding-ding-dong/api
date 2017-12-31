@@ -1,5 +1,6 @@
 import moment from 'moment'
 import ioredis from 'ioredis'
+import sanitizeHtml from 'sanitize-html'
 
 import logger from '../utils/logger'
 
@@ -11,6 +12,22 @@ const parse = item => ({
   feed: item.feed ? JSON.parse(item.feed) : null,
 })
 
+const filter = item => ({
+  ...item,
+  feed: { title: item.feed.title, description: item.feed.description },
+})
+
+const sanitize = item => ({
+  ...item,
+  feed: {
+    ...item.feed,
+    description: sanitizeHtml(item.feed.description, {
+      allowedTags: [],
+      allowedAttributes: {}
+    }).slice(0, 200),
+  },
+})
+
 export const getAll = async () => {
   try {
     const keys = await redis.keys('feed:http*')
@@ -18,7 +35,7 @@ export const getAll = async () => {
     const promises = keys.map(async key => {
       try {
         const item = await redis.hgetall(key)
-        return parse(item)
+        return sanitize(filter(parse(item)))
       } catch (e) {
         logger.error(e)
       }
@@ -41,7 +58,7 @@ export const getByTimestamp = async (sDate, eDate) => {
     const promises = keys.map(async key => {
       try {
         const item = await redis.hgetall('feed:' + key)
-        return parse(item)
+        return sanitize(filter(parse(item)))
       } catch (e) {
         logger.error(e)
       }
