@@ -1,4 +1,4 @@
-import uuid from 'uuid/v4'
+import uuidv5 from 'uuid/v5'
 import moment from 'moment'
 import ioredis from 'ioredis'
 
@@ -22,14 +22,15 @@ const generatePromises = () => {
       feeds = await parser.fetchAsync(source.url)
       feeds.forEach(async feed => {
         if (feed.guid && feed.date) {
-          const hashKey = 'feed:' + feed.guid
+          const uuid = uuidv5(feed.guid, uuidv5.URL)
+          const hashKey = 'feed:uuid:' + uuid
           const setKey = 'feed:timestamp'
 
           try {
             const isExists = await redis.exists(hashKey)
             if (!isExists) {
               redis.hmset(hashKey, {
-                uuid: uuid(),
+                uuid,
                 source: JSON.stringify(source),
                 feed: JSON.stringify(feed),
               })
@@ -39,9 +40,9 @@ const generatePromises = () => {
           }
 
           try {
-            const result = await redis.zscore(setKey, feed.guid)
+            const result = await redis.zscore(setKey, uuid)
             if (!result) {
-              redis.zadd(setKey, moment.utc(feed.date).valueOf(), feed.guid)
+              redis.zadd(setKey, moment.utc(feed.date).valueOf(), uuid)
             }
           } catch (e) {
             logger.error(e)

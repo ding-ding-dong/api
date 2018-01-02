@@ -30,7 +30,7 @@ const sanitize = item => ({
 
 export const getAll = async () => {
   try {
-    const keys = await redis.keys('feed:http*')
+    const keys = await redis.keys('feed:uuid:*')
 
     const promises = keys.map(async key => {
       try {
@@ -57,7 +57,7 @@ export const getByTimestamp = async (sDate, eDate) => {
 
     const promises = keys.map(async key => {
       try {
-        const item = await redis.hgetall('feed:' + key)
+        const item = await redis.hgetall('feed:uuid:' + key)
         return sanitize(filter(parse(item)))
       } catch (e) {
         logger.error(e)
