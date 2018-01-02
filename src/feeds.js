@@ -73,3 +73,12 @@ export const getByTimestamp = async (sDate, eDate) => {
     logger.error(e)
   }
 }
+
+export const getByUuid = async uuid => {
+  try {
+    const item = await redis.hgetall('feed:uuid:' + uuid)
+    return filter(parse(item))
+  } catch (e) {
+    logger.error(e)
+  }
+}

@@ -1,7 +1,7 @@
 import express from 'express'
 import moment from 'moment'
 
-import { getAll, getByTimestamp } from '../src/feeds'
+import { getAll, getByTimestamp, getByUuid } from '../src/feeds'
 
 const router = express.Router()
 
@@ -24,6 +24,10 @@ router.get('/', async (req, res, next) => {
   }
 
   res.json(feeds)
+})
+
+router.get('/:uuid', async (req, res, next) => {
+  res.json(await getByUuid(req.params.uuid))
 })
 
 export default router
