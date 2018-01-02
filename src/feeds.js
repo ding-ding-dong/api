@@ -14,7 +14,11 @@ const parse = item => ({
 
 const filter = item => ({
   ...item,
-  feed: { title: item.feed.title, description: item.feed.description },
+  feed: {
+    title: item.feed.title,
+    description: item.feed.description,
+    date: item.feed.date,
+  },
 })
 
 const sanitize = item => ({
