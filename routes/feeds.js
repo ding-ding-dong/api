@@ -10,9 +10,8 @@ router.get('/', async (req, res, next) => {
   const date = req.query.date
 
   if (date) {
-    const currentDateString = moment.utc(date).utcOffset('+0800').format('YYYYMMDD')
-    const sDate = moment.utc(currentDateString).utcOffset('+0800').add(-8, 'hours').valueOf()
-    const eDate = moment.utc(sDate).utcOffset('+0800').add(1, 'day').valueOf()
+    const sDate = Number(date)
+    const eDate = moment(sDate).add(1, 'day').valueOf()
     feeds = await getByTimestamp(sDate, eDate)
 
     const key = req.query.key
