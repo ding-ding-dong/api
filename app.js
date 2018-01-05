@@ -17,8 +17,8 @@ app.use((req, res, next) => {
   next()
 })
 
-app.use('/sources', sources)
-app.use('/feeds', feeds)
+app.use('api/sources', sources)
+app.use('api/feeds', feeds)
 
 schedule()
 
