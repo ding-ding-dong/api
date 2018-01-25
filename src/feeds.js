@@ -12,13 +12,27 @@ const parse = item => ({
   feed: item.feed ? JSON.parse(item.feed) : null,
 })
 
+const purge = markups => markups.slice(markups.indexOf('<p>'), markups.lastIndexOf('</p>') + 4)
+
 const filter = item => ({
   ...item,
   feed: {
     title: item.feed.title,
-    description: item.feed.description,
+    description: purge(item.feed.description),
     date: item.feed.date,
   },
+})
+
+const getImageTags = markups => markups.match(/<img([\w\W]+?)[\/]?>/g) || []
+
+const getImages = imageTags => imageTags.map(imageTag => imageTag.match(/src=['"](.*?)['"]/)[1])
+
+const append = item => ({
+  ...item,
+  feed: {
+    ...item.feed,
+    images: getImages(getImageTags(item.feed.description).slice(0, 3))
+  }
 })
 
 const sanitize = item => ({
@@ -39,7 +53,7 @@ export const getAll = async () => {
     const promises = keys.map(async key => {
       try {
         const item = await redis.hgetall(key)
-        return sanitize(filter(parse(item)))
+        return sanitize(append(filter(parse(item))))
       } catch (e) {
         logger.error(e)
       }
@@ -62,7 +76,7 @@ export const getByTimestamp = async (sDate, eDate) => {
     const promises = keys.map(async key => {
       try {
         const item = await redis.hgetall('feed:uuid:' + key)
-        return sanitize(filter(parse(item)))
+        return sanitize(append(filter(parse(item))))
       } catch (e) {
         logger.error(e)
       }
