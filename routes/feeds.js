@@ -22,7 +22,7 @@ router.get('/', async (req, res, next) => {
     feeds = await getAll()
   }
 
-  res.json(feeds)
+  res.json(feeds.sort((a, b) => moment(b.feed.date).valueOf() - moment(a.feed.date).valueOf()))
 })
 
 router.get('/:uuid', async (req, res, next) => {
