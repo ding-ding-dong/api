@@ -15,10 +15,6 @@ const sources = [{
   name: '创见',
   url: 'http://tech2ipo.com/feed',
 }, {
-  key: 'hackernews',
-  name: 'HackerNews',
-  url: 'https://news.ycombinator.com/rss',
-}, {
   key: 'pmcaff',
   name: 'PMCAFF',
   url: 'http://www.pmcaff.com/site/rss',
@@ -31,9 +27,9 @@ const sources = [{
   name: 'TechCrunch',
   url: 'http://techcrunch.cn/feed/',
 }, {
-  key: 'smzdm',
-  name: '什么值得买',
-  url: 'http://post.smzdm.com/feed',
+  key: 'engadget',
+  name: 'Engadget中国版',
+  url: 'https://cn.engadget.com/rss.xml',
 }]
 
 export default sources
