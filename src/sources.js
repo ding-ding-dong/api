@@ -26,10 +26,6 @@ const sources = [{
   key: 'techcrunch',
   name: 'TechCrunch',
   url: 'http://techcrunch.cn/feed/',
-}, {
-  key: 'engadget',
-  name: 'Engadget中国版',
-  url: 'https://cn.engadget.com/rss.xml',
 }]
 
 export default sources
