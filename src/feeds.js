@@ -12,14 +12,7 @@ const parse = item => ({
   feed: item.feed ? JSON.parse(item.feed) : null,
 })
 
-const purge = markups => {
-  markups = markups
-    .replace(/<article>/g, '')
-    .replace(/<\/article>/g, '')
-    .replace(/<\/blockquote>/g, '')
-    .replace(/<\/blockquote>/g, '')
-  return markups.slice(markups.indexOf('<p>'), markups.lastIndexOf('</p>') + 4)
-}
+const purge = markups => markups.replace(/<article>/g, '').replace(/<\/article>/g, '')
 
 const filter = item => ({
   ...item,
