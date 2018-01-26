@@ -8,6 +8,7 @@ const router = express.Router()
 router.get('/', async (req, res, next) => {
   let feeds = null
   const date = req.query.date
+  const page = req.query.page
 
   if (date) {
     const sDate = Number(date)
@@ -22,7 +23,12 @@ router.get('/', async (req, res, next) => {
     feeds = await getAll()
   }
 
-  res.json(feeds.sort((a, b) => moment(b.feed.date).valueOf() - moment(a.feed.date).valueOf()))
+  feeds = feeds.sort((a, b) => moment(b.feed.date).valueOf() - moment(a.feed.date).valueOf())
+
+  const pageSize = 20
+  feeds = page ? feeds.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize) : feeds
+
+  res.json(feeds)
 })
 
 router.get('/:uuid', async (req, res, next) => {
