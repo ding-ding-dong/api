@@ -4,7 +4,7 @@ import sync from './sync'
 import logger from '../utils/logger'
 
 const schedule = () => {
-  const cron = process.env.NODE_ENV === 'production' ? '*/5 * * * * *' : '0 * * * * *'
+  const cron = process.env.NODE_ENV === 'production' ? '*/2 * * * * *' : '0 * * * * *'
 
   nodeSchedule.scheduleJob(cron, () => {
     logger.info('SCHEDULE: Sync started at: ' + new Date().toString())

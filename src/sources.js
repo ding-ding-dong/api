@@ -3,10 +3,6 @@ const sources = [{
   name: '36氪',
   url: 'http://36kr.com/feed',
 }, {
-  key: 'huxiu',
-  name: '虎嗅',
-  url: 'https://www.huxiu.com/rss/0.xml',
-}, {
   key: 'ifanr',
   name: '爱范儿',
   url: 'http://www.ifanr.com/feed',
