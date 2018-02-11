@@ -1,5 +1,6 @@
 import express from 'express'
 import morgan from 'morgan'
+import bodyParser from 'body-parser'
 
 import sources from './routes/sources'
 import feeds from './routes/feeds'
@@ -11,9 +12,11 @@ const app = express()
 app.disable('x-powered-by')
 
 app.use(morgan('combined', { stream: logStream('access') }))
+app.use(bodyParser.json())
 
 app.use((req, res, next) => {
   res.set('Access-Control-Allow-Origin', '*')
+  res.set('Access-Control-Allow-Headers', '*')
   next()
 })
 

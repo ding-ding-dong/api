@@ -4,7 +4,7 @@ import ioredis from 'ioredis'
 
 import parser from '../utils/parser'
 import logger from '../utils/logger'
-import sources from './sources'
+import { getAll } from './sources'
 
 const redis = new ioredis()
 
@@ -14,7 +14,9 @@ const state = {
   waitTime: 60 * 1000,
 }
 
-const generatePromises = () => {
+const generatePromises = async () => {
+  const sources = await getAll()
+
   return sources.map(async source => {
     let feeds = null
 
@@ -59,7 +61,8 @@ const generatePromises = () => {
 
 const sync = async () => {
   try {
-    await Promise.all(generatePromises())
+    const promises = await generatePromises()
+    await Promise.all(promises)
 
     logger.info('SUCCESS: All sync tasks compeleted')
   } catch (e) {

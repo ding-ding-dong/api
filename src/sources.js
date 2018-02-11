@@ -1,27 +1,59 @@
-const sources = [{
-  key: '36kr',
-  name: '36氪',
-  url: 'http://36kr.com/feed',
-}, {
-  key: 'ifanr',
-  name: '爱范儿',
-  url: 'http://www.ifanr.com/feed',
-}, {
-  key: 'tech2ipo',
-  name: '创见',
-  url: 'http://tech2ipo.com/feed',
-}, {
-  key: 'pmcaff',
-  name: 'PMCAFF',
-  url: 'http://www.pmcaff.com/site/rss',
-}, {
-  key: 'woshipm',
-  name: '人人都是产品经理',
-  url: 'http://www.woshipm.com/feed',
-}, {
-  key: 'techcrunch',
-  name: 'TechCrunch',
-  url: 'http://techcrunch.cn/feed/',
-}]
+import ioredis from 'ioredis'
+import uuidv5 from 'uuid/v5'
 
-export default sources
+import logger from '../utils/logger'
+import parser from '../utils/parser'
+
+const redis = new ioredis()
+
+export const getAll = async () => {
+  try {
+    const keys = await redis.keys('source:uuid:*')
+  
+    const promises = keys.map(async key => {
+      try {
+        return await redis.hgetall(key)
+      } catch (e) {
+        logger.error(e)
+      }
+    })
+  
+    try {
+      return await Promise.all(promises)
+    } catch (e) {
+      logger.error(e)
+    }
+  } catch (e) {
+    logger.error(e)
+  }
+}
+
+export const add = async ({ name, url }) => {
+  if (name && url) {
+    const uuid = uuidv5(url, uuidv5.URL)
+    const hashKey = 'source:uuid:' + uuid
+
+    try {
+      const source = { key: uuid, name, url }
+      const isExists = await redis.exists(hashKey)
+
+      if (!isExists) {
+        redis.hmset(hashKey, source)
+      }
+
+      return source
+    } catch (e) {
+      logger.error(e)
+    }
+  }
+}
+
+export const isValid = async ({ url }) => {
+  try {
+    const feeds = await parser.fetchAsync(url)
+    return feeds.length > 0
+  } catch (e) {
+    logger.error(e)
+    return false
+  }
+}

@@ -6,6 +6,7 @@
     "start": "node --experimental-modules --loader ./bin/custom-loader.mjs ./bin/www"
   },
   "dependencies": {
+    "body-parser": "^1.18.2",
     "bunyan": "^2.0.2",
     "express": "^4.16.2",
     "feedparser": "^2.2.7",
