@@ -46,6 +46,19 @@ const sanitize = item => ({
   },
 })
 
+const safeSanitize = item => ({
+  ...item,
+  feed: {
+    ...item.feed,
+    description: sanitizeHtml(item.feed.description, {
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+      allowedAttributes: {
+        img: ['src']
+      }
+    }),
+  },
+})
+
 export const getAll = async () => {
   try {
     const keys = await redis.keys('feed:uuid:*')
@@ -95,7 +108,7 @@ export const getByTimestamp = async (sDate, eDate) => {
 export const getByUuid = async uuid => {
   try {
     const item = await redis.hgetall('feed:uuid:' + uuid)
-    return filter(parse(item))
+    return safeSanitize(filter(parse(item)))
   } catch (e) {
     logger.error(e)
   }
