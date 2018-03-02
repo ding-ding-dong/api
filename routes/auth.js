@@ -16,12 +16,19 @@ router.post('/', (req, res, next) => {
       const sessionId = uuidv4()
       const sessionValue = body.openid + '|' + body.session_key
 
-      redis.set(`session:${sessionId}`, sessionValue, 'EX', 24 * 3600)
+      redis.set(`session:${sessionId}`, sessionValue, 'EX', 3600)
       res.json(sessionId)
     } else {
       res.json(null)
     }
   })
+})
+
+router.get('/', async (req, res, next) => {
+  const { sessionId } = req.query
+  const sessionValue = await redis.get(`session:${sessionId}`)
+
+  res.json(!!sessionValue)
 })
 
 export default router
