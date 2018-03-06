@@ -21,7 +21,7 @@ const generatePromises = async () => {
     let feeds = null
 
     try {
-      feeds = await parser.fetchAsync(source.url)
+      feeds = (await parser.fetchAsync(source.url)).feeds
       feeds.forEach(async feed => {
         if (feed.guid && feed.date) {
           const uuid = uuidv5(feed.guid, uuidv5.URL)

@@ -52,16 +52,23 @@ var fetch = function (feed, done) {
     res.pipe(feedparser);
   });
 
-  var data = [];
+  var feeds = [];
+  var meta = {};
   feedparser.on('error', done);
+  feedparser.on('meta', function (data) {
+    meta = data;
+  });
   feedparser.on('readable', function () {
     var post;
     while (post = this.read()) {
-      data.push(post);
+      feeds.push(post);
     }
   });
   feedparser.on('end', function (err) {
-    done(err, data);
+    done(err, {
+      meta: meta,
+      feeds: feeds
+    });
   });
 };
 

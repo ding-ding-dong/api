@@ -2,7 +2,6 @@ import ioredis from 'ioredis'
 import uuidv5 from 'uuid/v5'
 
 import logger from '../utils/logger'
-import parser from '../utils/parser'
 
 const redis = new ioredis()
 
@@ -28,13 +27,13 @@ export const getAll = async () => {
   }
 }
 
-export const add = async ({ name, url }) => {
+export const add = async ({ name, url, description }) => {
   if (name && url) {
     const uuid = uuidv5(url, uuidv5.URL)
     const hashKey = 'source:uuid:' + uuid
 
     try {
-      const source = { key: uuid, name, url }
+      const source = { key: uuid, name, url, description }
       const isExists = await redis.exists(hashKey)
 
       if (!isExists) {
@@ -45,15 +44,5 @@ export const add = async ({ name, url }) => {
     } catch (e) {
       logger.error(e)
     }
-  }
-}
-
-export const isValid = async ({ url }) => {
-  try {
-    const feeds = await parser.fetchAsync(url)
-    return feeds.length > 0
-  } catch (e) {
-    logger.error(e)
-    return false
   }
 }
