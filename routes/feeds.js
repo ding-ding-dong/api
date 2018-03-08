@@ -25,7 +25,7 @@ router.get('/', async (req, res, next) => {
         const eDate = moment(sDate).add(1, 'day').valueOf()
 
         if (key) {
-          sDate = moment(sDate).add(-30, 'day').valueOf()
+          sDate = moment(sDate).add(-10, 'day').valueOf()
         }
         feeds = await getByTimestamp(sDate, eDate)
 
