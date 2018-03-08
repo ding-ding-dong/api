@@ -15,26 +15,27 @@ router.get('/', async (req, res, next) => {
 
   if (sessionValue) {
     try {
-      let feeds = null
+      let feeds = []
 
       const openId = sessionValue.split('|')[0]
       const setKey = `subscription:${openId}:`
 
-      const subscriptions = await redis.smembers(setKey)
-
       if (date) {
-        const sDate = Number(date)
+        let sDate = Number(date)
         const eDate = moment(sDate).add(1, 'day').valueOf()
+
+        if (key) {
+          sDate = moment(sDate).add(-30, 'day').valueOf()
+        }
         feeds = await getByTimestamp(sDate, eDate)
 
         if (key) {
           feeds = feeds.filter(feed => feed.source.key === key)
+        } else {
+          const subscriptions = await redis.smembers(setKey)
+          feeds = filter({ feeds, subscriptions })
         }
-      } else {
-        feeds = await getAll()
       }
-
-      feeds = filter({ feeds, subscriptions })
 
       feeds = feeds.sort((a, b) => moment(b.feed.date).valueOf() - moment(a.feed.date).valueOf())
 
@@ -44,6 +45,7 @@ router.get('/', async (req, res, next) => {
       res.json(feeds)
     } catch (e) {
       logger.error(e)
+      res.json([])
     }
   } else {
     res.json([])
