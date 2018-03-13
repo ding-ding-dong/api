@@ -18,7 +18,7 @@ const filter = item => ({
   ...item,
   feed: {
     title: item.feed.title,
-    description: purge(item.feed.description),
+    description: item.feed.description ? purge(item.feed.description) : '',
     date: item.feed.date,
   },
 })
