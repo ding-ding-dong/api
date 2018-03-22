@@ -9,7 +9,8 @@ const router = express.Router()
 
 router.post('/', (req, res, next) => {
   const { code } = req.body
-  request(`https://api.weixin.qq.com/sns/jscode2session?appid=wx1edb7b0df8946e01&secret=77f08dcbc73dabbf24914f99d8fdeeab&js_code=${code}&grant_type=authorization_code`, (error, response) => {
+
+  request(`https://api.weixin.qq.com/sns/jscode2session?appid=wx930971a1fbe9a8c6&secret=cc1eadd023fdb326d2d53c232f9b3ef3&js_code=${code}&grant_type=authorization_code`, (error, response) => {
     const body = JSON.parse(response.body)
 
     if (body.openid) {
