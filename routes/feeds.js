@@ -2,6 +2,7 @@ import express from 'express'
 import moment from 'moment'
 import ioredis from 'ioredis'
 
+import logger from '../utils/logger'
 import { getAll, getByTimestamp, getByUuid } from '../src/feeds'
 
 const redis = new ioredis()
