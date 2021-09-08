@@ -1,9 +1,10 @@
 # ---
 production docker run cmd:
-docker run --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -v /var/lib/redis:/var/lib/redis ding-ding-dong-api
+docker build -t ding-ding-dong-api .
+docker run -d --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -p 8080:8080 -v /var/redis/6379:/var/redis/6379 ding-ding-dong-api
 
 localhost docker run cmd:
-docker run -it --rm --name ding-ding-dong-api -e PORT=8080 -v $HOME/redis:/var/redis/6379 -p 8080:8080 ding-ding-dong-api
+docker run -it --rm --name ding-ding-dong-api -e PORT=8080 -p 8080:8080 -v $HOME/redis:/var/redis/6379 ding-ding-dong-api
 
 # ---
 
@@ -11,7 +12,7 @@ https://hub.docker.com/r/centos/systemd
 
 FROM centos/systemd
 
-RUN curl -sL https://rpm.nodesource.com/setup_9.x | bash - && yum install nodejs -y
+RUN curl -sL https://rpm.nodesource.com/setup_8.x | bash - && yum install nodejs -y
 RUN yum install gcc gcc-c++ make -y
 
 RUN npm install --global yarn
@@ -77,3 +78,36 @@ https://wsk1103.github.io/2019/01/12/centos-7-%E5%AE%89%E8%A3%85Redis/
 
 # ---
 dockerignore的作用：COPY指令不会复制对应的内容
+
+# ---
+ECS上的操作：
+centos7.9
+ssh root@139.224.81.61
+
+install docker:
+curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+systemctl enable docker
+systemctl start docker
+
+yum install git -y
+
+Docker：docker国内镜像加速
+https://www.cnblogs.com/nhdlb/p/12567154.html
+vim /etc/docker/daemon.json
+{
+  "registry-mirrors": [
+    "https://registry.docker-cn.com",
+    "http://hub-mirror.c.163.com",
+    "https://docker.mirrors.ustc.edu.cn"
+  ]
+}
+systemctl daemon-reload && systemctl restart docker
+check: docker info
+
+build ding-ding-dong-web时要先装node和yarn
+curl -sL https://rpm.nodesource.com/setup_8.x | bash - && yum install nodejs -y
+npm install --global yarn
+cd ding-ding-dong-web
+yarn
+
+# ---
