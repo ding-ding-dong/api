@@ -2,7 +2,6 @@ FROM centos:7
 
 RUN curl -sL https://rpm.nodesource.com/setup_8.x | bash - && yum install nodejs -y
 RUN yum install gcc gcc-c++ wget make -y
-# RUN yum install epel-release -y
 
 RUN npm install --global yarn
 
