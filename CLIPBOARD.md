@@ -154,3 +154,13 @@ redis-server起的pid 999，kill -9 999不会删除/var/run/redis_6379.pid，直
 tini or dumb-init
 docker run --init 现在会自动使用tini作为init process
 docker stop 有时候会等10秒，就是因为没有使用init process，pid 1在等10秒子进程自动退出
+
+# ---
+解决阿里云访问github慢的问题：
+ECS在国内时，dns解析github.com等域名时指向的A记录（20.205.243.166，一般都是一个ELB，类似Jam F5或者Jam ccloud load balancer）被国内防火墙限制了，导致速度很慢
+可以通过 https://github.com.ipaddress.com/ 直接查询到美国服务器的A记录ip地址：140.82.113.3
+github.global.ssl.Fastly.net 199.232.69.194
+vim /etc/hosts
+140.82.113.3 github.com
+199.232.69.194 github.global.ssl.fastly.net
+改过之后，用nslookup或者dig查看域名的dns还是指向老的ip，但ping和curl已经是新的ip了（怀疑是dns cache的问题）
