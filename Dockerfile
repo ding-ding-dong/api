@@ -10,10 +10,14 @@ RUN cd redis-6.2.5 && make MALLOC=libc && cd src && make install
 RUN mkdir /etc/redis && mkdir /var/log/redis && mkdir -p /var/redis/6379 && cp redis-6.2.5/utils/redis_init_script /etc/init.d/redis_6379
 COPY redis.conf /etc/redis/6379.conf
 
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64
+RUN chmod +x /usr/local/bin/dumb-init
+
 WORKDIR /app
 
 COPY . .
 
 RUN yarn
 
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["./scripts/start.sh"]
