@@ -1,7 +1,11 @@
 # ---
 production docker run cmd:
 docker build -t ding-ding-dong-api .
-docker run -d --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -p 8080:8080 -v /var/redis/6379:/var/redis/6379 ding-ding-dong-api
+docker run -d --init --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -p 8080:8080 -v /var/redis/6379:/var/redis/6379 ding-ding-dong-api
+docker stop ding-ding-dong-api && docker rm ding-ding-dong-api
+docker exec -it ding-ding-dong-api bash
+ps -ef
+tail -f /var/log/redis/redis_6379.log
 
 localhost docker run cmd:
 docker run -it --rm --name ding-ding-dong-api -e PORT=8080 -p 8080:8080 -v $HOME/redis:/var/redis/6379 ding-ding-dong-api
@@ -110,4 +114,67 @@ npm install --global yarn
 cd ding-ding-dong-web
 yarn
 
+ECS需要配置安全组打开443端口
+
 # ---
+
+意外reboot vm会导致redis pid被杀掉，但pid文件还在：
+cat /var/run/redis_6379.pid
+ps aux | grep redis # 此时看不到redis的进程
+需要手动删掉pid文件，重启server：
+rm -rf /var/run/redis_6379.pid
+cd /etc/init.d/ && ./redis_6379 start
+此时对比上面二者的值，应该是一致的
+docker stop的时候就会造成这个问题
+当我们使用start.sh的时候，start.sh的pid为1，具体运行的命令的pid会是他的子进程：
+UID        PID  PPID  C STIME TTY          TIME CMD
+root         1     0  0 16:10 ?        00:00:00 /usr/local/bin/dumb-init -- ./scripts/start.sh
+root         7     1  0 16:10 ?        00:00:00 /bin/bash ./scripts/start.sh
+root        10     1  0 16:10 ?        00:00:00 /usr/local/bin/redis-server 127.0.0.1:6379
+root        11     7  6 16:10 ?        00:00:04 /usr/bin/node --experimental-modules --loader /app/bin/custom-loader.mjs /app/bin/www
+root        24     0  0 16:10 pts/0    00:00:00 bash
+root        38    24  0 16:10 pts/0    00:00:00 tail -f /var/log/redis/redis_6379.log
+root        39     0  0 16:11 pts/1    00:00:00 bash
+root        53    39  0 16:11 pts/1    00:00:00 ps -ef
+此时docker stop只会给pid 1发送kill -15信号(SIGTERM)， pid 9和pid16都会kill - 9，所以会出现pid文件还在的现象
+思路1：手动删除pid文件，然后docker restart
+思路2：start.sh里面先无脑删掉pid文件再启动
+思路3：dumb init，即docker run --init
+
+SIGTERM:
+The SIGTERM signal is a generic signal used to cause program termination. Unlike SIGKILL , this signal can be blocked, handled, and ignored. It is the normal way to politely ask a program to terminate. The shell command kill generates SIGTERM by default.
+SIGTERM vs ctrl + c
+This is not releated to bash, but to the underlying tty driver.
+Usually, <ctrl>-C is SIGINT but you can change that to any other character with the stty command.
+SIGTERM is not linked to an interrupt character but is just the signal sent by default by the kill command.
+
+使用--init时，虽然docker stop可以发信号给子进程，但是pid 1进程的退出，取决于子进程如何返回自己的状态
+如果子进程是立马退出，然后做后续操作，那么会由于pid 1已经退出，容器已经停止了，会导致后续操作无法完成
+如果子进程收到sigterm信号后，自己先graceful shutdown再退出，则比较符合预期
+看起来，redis-server是属于第一种情况
+
+透过现象可以确定的：
+redis-server起的pid 999，kill -9 999不会删除/var/run/redis_6379.pid，直接kill 999则会删除redis_6379.pid
+redis loglevel设为debug时，kill 999的log：
+10:signal-handler (1631203758) Received SIGTERM scheduling shutdown...
+10:M 09 Sep 2021 16:09:18.204 # User requested shutdown...
+10:M 09 Sep 2021 16:09:18.204 * Calling fsync() on the AOF file.
+10:M 09 Sep 2021 16:09:18.204 * Saving the final RDB snapshot before exiting.
+10:M 09 Sep 2021 16:09:18.218 * DB saved on disk
+10:M 09 Sep 2021 16:09:18.218 * Removing the pid file.
+10:M 09 Sep 2021 16:09:18.218 # Redis is now ready to exit, bye bye...
+
+# ---
+tini or dumb-init
+docker run --init 现在会自动使用tini作为init process
+docker stop 有时候会等10秒，就是因为没有使用init process，pid 1在等10秒子进程自动退出
+
+# ---
+解决阿里云访问github慢的问题：
+ECS在国内时，dns解析github.com等域名时指向的A记录（20.205.243.166，一般都是一个ELB，类似Jam F5或者Jam ccloud load balancer）被国内防火墙限制了，导致速度很慢
+可以通过 https://github.com.ipaddress.com/ 直接查询到美国服务器的A记录ip地址：140.82.113.3
+github.global.ssl.Fastly.net 199.232.69.194
+vim /etc/hosts
+140.82.113.3 github.com
+199.232.69.194 github.global.ssl.fastly.net
+改过之后，用nslookup或者dig查看域名的dns还是指向老的ip，但ping和curl已经是新的ip了（怀疑是dns cache的问题）
