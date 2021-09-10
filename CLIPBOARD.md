@@ -4,10 +4,10 @@ docker build -t ding-ding-dong-api .
 docker run -d <--init> --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -p 8080:8080 -v /var/redis/6379:/var/redis/6379 ding-ding-dong-api
 
 docker stop ding-ding-dong-api && docker rm ding-ding-dong-api
+docker run -d --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -p 8080:8080 -v /var/redis/6379:/var/redis/6379 ding-ding-dong-api
 docker exec -it ding-ding-dong-api bash
 ps -ef
 tail -f /var/log/redis/redis_6379.log
-docker run -d --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -p 8080:8080 -v /var/redis/6379:/var/redis/6379 ding-ding-dong-api
 docker logs ding-ding-dong-api
 
 localhost docker run cmd:
@@ -166,12 +166,16 @@ redis loglevel设为debug时，kill 999的log：
 10:M 09 Sep 2021 16:09:18.218 * DB saved on disk
 10:M 09 Sep 2021 16:09:18.218 * Removing the pid file.
 10:M 09 Sep 2021 16:09:18.218 # Redis is now ready to exit, bye bye...
-不使用init process则只会给pid 1发送信号，并傻等10秒钟，子进程不会收到信号，也不会有任何反应
 
-# ---
 tini or dumb-init
 docker run --init 现在会自动使用tini作为init process
-docker stop 有时候会等10秒，就是因为没有使用init process，pid 1在等10秒子进程自动退出
+docker stop 有时候会等10秒，就是因为没有使用init process
+不使用init process则只会给pid 1发送信号，并傻等10秒钟，子进程不会收到信号，也不会有任何反应
+
+结论：
+使用docker stop时，就算使用了init process，sigterm的信号虽然能够传给pid 1的直接子进程redis-server，但是由于tini的机制或bug，导致tini不会等待子进程完全退出再退出，而是直接退出了：
+https://www.bladewan.com/2021/05/26/graceful_close/
+https://github.com/krallin/tini/issues/180
 
 # ---
 (seems not working)解决阿里云访问github慢的问题：
@@ -184,3 +188,35 @@ vim /etc/hosts
 改过之后，用nslookup或者dig查看域名的dns还是指向老的ip，但ping和curl已经是新的ip了（怀疑是dns cache的问题）
 
 (seems not working)可以尝试查看本机防火墙状态firewall-cmd --state 和ECS云盾状态
+
+原因：
+nslookup 默认会走dns server，配置在/etc/resolv.conf里面
+因此需要使用一个本地dns server，如dnsmasq，默认会从/etc/hosts,/etc/resolv.conf读取文件
+https://blog.51cto.com/yanconggod/1977598
+yum install dnsmasq -y
+systemctl status dnsmasq
+systemctl start dnsmasq
+systemctl enable dnsmasq
+lsof -i:53
+dig @127.0.0.1 abc.com
+vim /etc/resolv.conf加上 127.0.0.1
+nslookup abc.com正常返回了/etc/hosts里面的值
+
+vim /etc/NetworkManager/NetworkManager.conf
+在main下面添加dns=none，防止dhclient-script修改resolv.conf
+[main]
+plugins=ifupdown,keyfile
+dns=none
+
+# ---
+修改dns解析顺序：
+vim /etc/nsswitch.conf
+hosts: files dns # 默认为先走 /etc/hosts，然后dns server
+
+ping和nslookup的结果不一致的问题：
+使用ping会按照dns解析顺序执行，而nslookup猜测是直接访问的dns服务器
+
+dns server不推荐使用nscd：
+https://jameshfisher.com/2018/02/05/dont-use-nscd/
+因为nscd不会listen 127.0.0.1:53，而是listen on a socket: /var/run/nscd/socket
+这会导致/etc/resovl.conf无法配置本地dns server导致nslookup还是走其它的nameserver

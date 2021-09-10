@@ -2,4 +2,4 @@
 
 cd /etc/init.d/ && ./redis_6379 start
 
-/usr/bin/node --experimental-modules --loader /app/bin/custom-loader.mjs /app/bin/www
+exec /usr/bin/node --experimental-modules --loader /app/bin/custom-loader.mjs /app/bin/www
