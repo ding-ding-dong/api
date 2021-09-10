@@ -213,6 +213,7 @@ lsof -i:53
 dig @127.0.0.1 abc.com
 vim /etc/resolv.conf加上 127.0.0.1
 nslookup abc.com正常返回了/etc/hosts里面的值
+修改hosts的内容后要systemctl restart dnsmasq
 
 vim /etc/NetworkManager/NetworkManager.conf
 在main下面添加dns=none，防止dhclient-script修改resolv.conf
