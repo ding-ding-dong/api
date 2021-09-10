@@ -1,11 +1,14 @@
 # ---
 production docker run cmd:
 docker build -t ding-ding-dong-api .
-docker run -d --init --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -p 8080:8080 -v /var/redis/6379:/var/redis/6379 ding-ding-dong-api
+docker run -d <--init> --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -p 8080:8080 -v /var/redis/6379:/var/redis/6379 ding-ding-dong-api
+
 docker stop ding-ding-dong-api && docker rm ding-ding-dong-api
 docker exec -it ding-ding-dong-api bash
 ps -ef
 tail -f /var/log/redis/redis_6379.log
+docker run -d --name ding-ding-dong-api --restart=always -e NODE_ENV=production -e PORT=8080 -p 8080:8080 -v /var/redis/6379:/var/redis/6379 ding-ding-dong-api
+docker logs ding-ding-dong-api
 
 localhost docker run cmd:
 docker run -it --rm --name ding-ding-dong-api -e PORT=8080 -p 8080:8080 -v $HOME/redis:/var/redis/6379 ding-ding-dong-api
@@ -154,7 +157,7 @@ SIGTERM is not linked to an interrupt character but is just the signal sent by d
 看起来，redis-server是属于第一种情况
 
 透过现象可以确定的：
-redis-server起的pid 999，kill -9 999不会删除/var/run/redis_6379.pid，直接kill 999则会删除redis_6379.pid
+redis-server起的pid 999，kill -9 999不会删除/var/run/redis_6379.pid，kill 999则会删除redis_6379.pid
 redis loglevel设为debug时，kill 999的log：
 10:signal-handler (1631203758) Received SIGTERM scheduling shutdown...
 10:M 09 Sep 2021 16:09:18.204 # User requested shutdown...
@@ -163,6 +166,7 @@ redis loglevel设为debug时，kill 999的log：
 10:M 09 Sep 2021 16:09:18.218 * DB saved on disk
 10:M 09 Sep 2021 16:09:18.218 * Removing the pid file.
 10:M 09 Sep 2021 16:09:18.218 # Redis is now ready to exit, bye bye...
+不使用init process则只会给pid 1发送信号，并傻等10秒钟，子进程不会收到信号，也不会有任何反应
 
 # ---
 tini or dumb-init
@@ -170,7 +174,7 @@ docker run --init 现在会自动使用tini作为init process
 docker stop 有时候会等10秒，就是因为没有使用init process，pid 1在等10秒子进程自动退出
 
 # ---
-解决阿里云访问github慢的问题：
+(seems not working)解决阿里云访问github慢的问题：
 ECS在国内时，dns解析github.com等域名时指向的A记录（20.205.243.166，一般都是一个ELB，类似Jam F5或者Jam ccloud load balancer）被国内防火墙限制了，导致速度很慢
 可以通过 https://github.com.ipaddress.com/ 直接查询到美国服务器的A记录ip地址：140.82.113.3
 github.global.ssl.Fastly.net 199.232.69.194
@@ -178,3 +182,5 @@ vim /etc/hosts
 140.82.113.3 github.com
 199.232.69.194 github.global.ssl.fastly.net
 改过之后，用nslookup或者dig查看域名的dns还是指向老的ip，但ping和curl已经是新的ip了（怀疑是dns cache的问题）
+
+(seems not working)可以尝试查看本机防火墙状态firewall-cmd --state 和ECS云盾状态

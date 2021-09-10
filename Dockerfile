@@ -20,5 +20,5 @@ COPY . .
 
 RUN yarn
 
-ENTRYPOINT ["/tini", "-g", "--"]
+ENTRYPOINT ["/tini", "-g", "-s", "--"]
 CMD ["./scripts/start.sh"]
