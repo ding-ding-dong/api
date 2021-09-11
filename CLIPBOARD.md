@@ -183,9 +183,17 @@ https://github.com/krallin/tini/issues/180
 方案：
 https://segmentfault.com/a/1190000022971054
 使用trap来实现graceful shutdown
+trap 收到任何大于 128 的信号都会让 wait 命令结束，以执行 trap 中的方法。
+
+UID        PID  PPID  C STIME TTY          TIME CMD
+root         1     0  0 Sep10 ?        00:00:00 /bin/bash ./scripts/start.sh
+root         9     1  0 Sep10 ?        00:01:40 /usr/local/bin/redis-server 127.0.0.1:6379
+root        10     1  1 Sep10 ?        00:19:05 /usr/bin/node --experimental-modules --loader /app/bin/custom-loader.mjs /app/bin/www
+root        24     0  0 15:28 pts/0    00:00:00 bash
+root        39    24  0 15:28 pts/0    00:00:00 ps -ef
 
 结论：
-直接启动进程时，使用 ENTRYPOINT 的 exec form
+直接启动进程时，使用 ENTRYPOINT 的 exec form（既然 docker 只会将 sigal 发送给 PID 1 的进程，那就让我们的进程成为 PID 1 的进程就好了。exec 形式的命令会使用 PID 1 的进程）
 启动单一进程，并且需要一点准备工作时，使用 exec 命令
 启动多个进程时，组合使用 trap、wait、kill 命令
 
@@ -222,6 +230,9 @@ plugins=ifupdown,keyfile
 dns=none
 
 使用了本地dns还是不work，nslookup没问题，ping也通，但就是git pull卡住
+
+方案：
+换成gitlab
 
 # ---
 修改dns解析顺序：
