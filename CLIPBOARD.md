@@ -234,6 +234,10 @@ dns=none
 方案：
 换成gitlab
 
+方案：配置代理：
+CentOS7 安装 ShadowSocks 客户端]
+https://segmentfault.com/a/1190000040351044
+
 # ---
 修改dns解析顺序：
 vim /etc/nsswitch.conf
