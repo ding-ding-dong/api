@@ -85,6 +85,9 @@ Installing Redis more properly:
 https://redis.io/topics/quickstart
 https://wsk1103.github.io/2019/01/12/centos-7-%E5%AE%89%E8%A3%85Redis/
 
+Redis持久化
+https://segmentfault.com/a/1190000002906345
+
 # ---
 dockerignore的作用：COPY指令不会复制对应的内容
 
